@@ -1434,8 +1434,8 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
 
                 if not is_stdlib and len(path) > 0:
                     project_dirs.append(path)
-            self.pydevd_request(pydevd_comm.CMD_SET_PROJECT_ROOTS,
-                                '\t'.join(project_dirs))
+#             self.pydevd_request(pydevd_comm.CMD_SET_PROJECT_ROOTS,
+#                                 '\t'.join(project_dirs))
 
     def _is_stdlib(self, filepath):
         filepath = os.path.normcase(os.path.normpath(filepath))
