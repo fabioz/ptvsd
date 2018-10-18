@@ -1444,7 +1444,7 @@ def _locked_settrace(
             additional_info.suspend_type = PYTHON_SUSPEND
         else:
             # Ask to break as soon as possible.
-            debugger.set_suspend(t, CMD_THREAD_SUSPEND)
+            debugger.set_suspend(t, CMD_SET_BREAK)
 
 
 def stoptrace():
