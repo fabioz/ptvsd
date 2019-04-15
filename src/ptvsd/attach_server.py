@@ -143,20 +143,20 @@ def break_into_debugger():
         ptvsd.log.info('break_into_debugger() ignored - debugger not attached')
         return
 
+    def stop_at_frame_callable():
     # Get the first frame in the stack that's not an internal frame.
-    global_debugger = get_global_debugger()
-    stop_at_frame = sys._getframe().f_back
-    while stop_at_frame is not None and global_debugger.get_file_type(
-            get_abs_path_real_path_and_base_from_frame(stop_at_frame)) == global_debugger.PYDEV_FILE:
-        stop_at_frame = stop_at_frame.f_back
+        global_debugger = get_global_debugger()
+        stop_at_frame = sys._getframe().f_back
+        while stop_at_frame is not None and global_debugger.get_file_type(
+                get_abs_path_real_path_and_base_from_frame(stop_at_frame)) == global_debugger.PYDEV_FILE:
+            stop_at_frame = stop_at_frame.f_back
 
     _pydevd_settrace(
         suspend=True,
         trace_only_current_thread=True,
         patch_multiprocessing=False,
-        stop_at_frame=stop_at_frame,
+        stop_at_frame=stop_at_frame_callable,
     )
-    stop_at_frame = None
 
 
 def debug_this_thread():

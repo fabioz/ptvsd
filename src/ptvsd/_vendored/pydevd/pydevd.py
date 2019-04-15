@@ -139,6 +139,7 @@ file_system_encoding = getfilesystemencoding()
 
 _CACHE_FILE_TYPE = {}
 
+
 #=======================================================================================================================
 # PyDBCommandThread
 #=======================================================================================================================
@@ -1957,6 +1958,9 @@ def _locked_settrace(
 
     # Suspend as the last thing after all tracing is in place.
     if suspend:
+        if callable(stop_at_frame):
+            stop_at_frame = stop_at_frame()
+
         if stop_at_frame is not None:
             # If the step was set we have to go to run state and
             # set the proper frame for it to stop.
