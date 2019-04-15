@@ -147,11 +147,11 @@ class FilesFiltering(object):
     def _get_default_library_roots(cls):
         # Provide sensible defaults if not in env vars.
         import site
-        roots = [sys.prefix]
-        if hasattr(sys, 'base_prefix'):
-            roots.append(sys.base_prefix)
-        if hasattr(sys, 'real_prefix'):
-            roots.append(sys.real_prefix)
+        roots = []
+
+        # NOTE: Previously this included sys.prefix, sys.base_prefix and sys.real_prefix
+        # On some systems those resolve to '/usr'. That means any user code will
+        # also be treated as library code.
 
         if hasattr(site, 'getusersitepackages'):
             site_paths = site.getusersitepackages()
