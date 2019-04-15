@@ -12,7 +12,6 @@ import os
 import re
 import platform
 import pydevd_file_utils
-import site
 import socket
 import sys
 import threading
