@@ -636,10 +636,16 @@ class DebugSession(object):
                 'breakpoints': [{'line': bp_line} for bp_line in lines],
             }).wait_for_response().body.get('breakpoints', None)
 
-    def wait_for_thread_stopped(self, reason=ANY):
-        thread_stopped = self.wait_for_next(Event('stopped', ANY.dict_with({'reason': reason})))
+    def wait_for_thread_stopped(self, reason=ANY, text=ANY, description=ANY):
+        thread_stopped = self.wait_for_next(Event('stopped', ANY.dict_with({
+            'reason': reason, 'text': text, 'description': description})))
 
         tid = thread_stopped.body['threadId']
+
+        assert thread_stopped.body['allThreadsStopped']
+        assert thread_stopped.body['preserveFocusHint'] == \
+            (thread_stopped.body['reason'] not in ['step', 'exception', 'breakpoint'])
+
         assert tid is not None
 
         resp_stacktrace = self.send_request('stackTrace', arguments={
