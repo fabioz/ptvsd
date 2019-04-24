@@ -1,5 +1,3 @@
-import sys
-
 from _pydev_imps._pydev_saved_modules import threading
 from _pydevd_bundle.pydevd_constants import DebugInfoHolder, IS_PY2, \
     get_global_debugger, GetGlobalDebugger, set_global_debugger  # Keep for backward compatibility @UnusedImport
@@ -8,6 +6,7 @@ from _pydevd_bundle.pydevd_comm_constants import ID_TO_MEANING
 from _pydevd_bundle.pydevd_constants import HTTP_PROTOCOL, HTTP_JSON_PROTOCOL, \
     get_protocol, IS_JYTHON
 import json
+from _pydev_bundle import pydev_log
 
 
 class NetCommand:
@@ -107,7 +106,7 @@ class NetCommand:
                 out_message += ' '
                 out_message += text.replace('\n', ' ')
                 try:
-                    sys.stderr.write('%s\n' % (out_message,))
+                    pydev_log.critical('%s\n', out_message)
                 except:
                     pass
             finally:

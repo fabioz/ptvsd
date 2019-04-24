@@ -21,19 +21,23 @@ import tempfile
 _original_dump_stacks = pytest_timeout.dump_stacks
 
 
-def _on_dump_stack_print_pydevd_log():
-    # On timeout we also want to print the pydev log.
-    print('*********************************')
-    print('pydevd log on timeout')
-    print('*********************************')
+def _print_pydevd_log(reason):
+    print('******************************************************************')
+    print('pydevd log on %s' % (reason,))
+    print('******************************************************************')
     current_pydevd_debug_file = os.environ.get('PYDEVD_DEBUG_FILE')
     if current_pydevd_debug_file:
         if os.path.exists(current_pydevd_debug_file):
             with open(current_pydevd_debug_file, 'r') as stream:
                 print(stream.read())
-    print('*********************************')
-    print('*********************************')
-    print('*********************************')
+    print('******************************************************************')
+    print('******************************************************************')
+    print('******************************************************************')
+
+
+def _on_dump_stack_print_pydevd_log():
+    # On timeout we also want to print the pydev log.
+    _print_pydevd_log('timeout')
     _original_dump_stacks()
 
 
@@ -85,14 +89,22 @@ def pytest_runtest_makereport(item, call):
 def pytest_pyfunc_call(pyfuncitem):
     # Resets the timestamp to zero for every new test, and ensures that
     # all output is printed after the test.
-
-    current_pydevd_debug_file = tempfile.mktemp(suffix='.log', prefix='pydevd_output_%s' % (os.getpid(),))
-    os.environ['PYDEVD_DEBUG'] = 'True'
-    os.environ['PYDEVD_DEBUG_FILE'] = current_pydevd_debug_file
-
     helpers.timestamp_zero = helpers.clock()
     yield
     wait_for_output()
+
+
+@pytest.fixture(autouse=True)
+def _add_pydevd_output(request, tmpdir):
+    current_pydevd_debug_file = tempfile.mktemp(suffix='.log', prefix='pydevd_output_%s' % (os.getpid(),), dir=str(tmpdir))
+    os.environ['PYDEVD_DEBUG'] = 'True'
+    os.environ['PYDEVD_DEBUG_FILE'] = current_pydevd_debug_file
+    yield
+    if request.node.setup_result.failed:
+        _print_pydevd_log('test failure')
+    elif request.node.setup_result.passed:
+        if request.node.call_result.failed:
+            _print_pydevd_log()
 
 
 @pytest.fixture

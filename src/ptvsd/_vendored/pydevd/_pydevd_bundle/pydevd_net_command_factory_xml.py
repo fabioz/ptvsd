@@ -1,6 +1,5 @@
 import json
 import sys
-import traceback
 
 from _pydev_bundle.pydev_is_thread_alive import is_thread_alive
 from _pydev_imps._pydev_saved_modules import thread

@@ -269,9 +269,8 @@ class PyDevdAPI(object):
         assert func_name.__class__ == str  # i.e.: bytes on py2 and str on py3
 
         if not pydevd_file_utils.exists(filename):
-            sys.stderr.write('pydev debugger: warning: trying to add breakpoint'\
+            pydev_log.critical('pydev debugger: warning: trying to add breakpoint'\
                 ' to file that does not exist: %s (will have no effect)\n' % (filename,))
-            sys.stderr.flush()
             return
 
         if breakpoint_type == 'python-line':
@@ -297,7 +296,6 @@ class PyDevdAPI(object):
 
         if DebugInfoHolder.DEBUG_TRACE_BREAKPOINTS > 0:
             pydev_log.debug('Added breakpoint:%s - line:%s - func_name:%s\n', filename, line, func_name)
-            sys.stderr.flush()
 
         if filename in file_to_id_to_breakpoint:
             id_to_pybreakpoint = file_to_id_to_breakpoint[filename]
@@ -370,7 +368,7 @@ class PyDevdAPI(object):
                 id_to_pybreakpoint = file_to_id_to_breakpoint.get(filename, {})
                 if DebugInfoHolder.DEBUG_TRACE_BREAKPOINTS > 0:
                     existing = id_to_pybreakpoint[breakpoint_id]
-                    sys.stderr.write('Removed breakpoint:%s - line:%s - func_name:%s (id: %s)\n' % (
+                    pydev_log.info('Removed breakpoint:%s - line:%s - func_name:%s (id: %s)\n' % (
                         filename, existing.line, existing.func_name.encode('utf-8'), breakpoint_id))
 
                 del id_to_pybreakpoint[breakpoint_id]

@@ -21,6 +21,7 @@ from _pydevd_bundle.pydevd_net_command import NetCommand
 from _pydevd_bundle.pydevd_utils import convert_dap_log_message_to_expression
 import pydevd_file_utils
 from _pydev_bundle import pydev_log
+from _pydevd_bundle.pydevd_constants import DebugInfoHolder
 
 try:
     import dis
@@ -172,8 +173,8 @@ class _PyDevJsonCommandProcessor(object):
                 return NetCommand(CMD_RETURN, 0, error_response, is_json=True)
 
         else:
-            if DEBUG:
-                print('Process %s: %s\n' % (
+            if DebugInfoHolder.DEBUG_RECORD_SOCKET_READS and DebugInfoHolder.DEBUG_TRACE_LEVEL >= 1:
+                pydev_log.info('Process %s: %s\n' % (
                     request.__class__.__name__, json.dumps(request.to_dict(), indent=4, sort_keys=True),))
 
             assert request.type == 'request'
