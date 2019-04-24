@@ -27,6 +27,7 @@ from pydevd_file_utils import get_abs_path_real_path_and_base_from_frame
 import pydevd_file_utils
 from pydevd_tracing import get_exception_traceback_str
 from _pydev_bundle._pydev_completer import completions_to_xml
+from _pydev_bundle import pydev_log
 
 if IS_IRONPYTHON:
 
@@ -205,7 +206,7 @@ class NetCommandFactory(object):
                 append('file="%s" line="%s">' % (quote(make_valid_xml_value(filename_in_utf8), '/>_= \t'), lineno))
                 append("</frame>")
         except:
-            traceback.print_exc()
+            pydev_log.exception()
 
         curr_frame = None  # Clear frame reference
         return ''.join(cmd_text_list)

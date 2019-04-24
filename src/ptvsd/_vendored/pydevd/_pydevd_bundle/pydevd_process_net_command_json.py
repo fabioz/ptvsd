@@ -1,5 +1,5 @@
-from functools import partial
 import bisect
+from functools import partial
 import itertools
 import json
 import linecache
@@ -10,8 +10,8 @@ from _pydevd_bundle._debug_adapter import pydevd_base_schema
 from _pydevd_bundle._debug_adapter.pydevd_schema import (SourceBreakpoint, ScopesResponseBody, Scope,
     VariablesResponseBody, SetVariableResponseBody, ModulesResponseBody, SourceResponseBody,
     GotoTargetsResponseBody, ExceptionOptions)
+from _pydevd_bundle._debug_adapter.pydevd_schema import CompletionsResponseBody
 from _pydevd_bundle.pydevd_api import PyDevdAPI
-from _pydevd_bundle.pydevd_comm import pydevd_log
 from _pydevd_bundle.pydevd_comm_constants import (
     CMD_RETURN, CMD_STEP_OVER_MY_CODE, CMD_STEP_OVER, CMD_STEP_INTO_MY_CODE,
     CMD_STEP_INTO, CMD_STEP_RETURN_MY_CODE, CMD_STEP_RETURN, CMD_SET_NEXT_STATEMENT)
@@ -20,7 +20,7 @@ from _pydevd_bundle.pydevd_json_debug_options import _extract_debug_options
 from _pydevd_bundle.pydevd_net_command import NetCommand
 from _pydevd_bundle.pydevd_utils import convert_dap_log_message_to_expression
 import pydevd_file_utils
-from _pydevd_bundle._debug_adapter.pydevd_schema import CompletionsResponseBody
+from _pydev_bundle import pydev_log
 
 try:
     import dis
@@ -799,7 +799,7 @@ class _PyDevJsonCommandProcessor(object):
                 # throughout the debugger which rely on always having the same file type.
                 message = ("Calls to set or change don't trace patterns (via setDebuggerProperty) are not "
                            "allowed since debugging has already started or don't trace patterns are already set.")
-                pydevd_log(0, message)
+                pydev_log.critical(message)
                 response_args = {'success':False, 'body': {}, 'message': message}
                 response = pydevd_base_schema.build_response(request, kwargs=response_args)
                 return NetCommand(CMD_RETURN, 0, response, is_json=True)

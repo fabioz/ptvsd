@@ -6,7 +6,7 @@ from _pydevd_bundle.pydevd_constants import DebugInfoHolder, IS_PY2, \
 from _pydevd_bundle.pydevd_utils import quote_smart as quote, to_string
 from _pydevd_bundle.pydevd_comm_constants import ID_TO_MEANING
 from _pydevd_bundle.pydevd_constants import HTTP_PROTOCOL, HTTP_JSON_PROTOCOL, \
-    get_protocol
+    get_protocol, IS_JYTHON
 import json
 
 
@@ -79,10 +79,17 @@ class NetCommand:
 
     def send(self, sock):
         as_bytes = self._as_bytes
-        if get_protocol() in (HTTP_PROTOCOL, HTTP_JSON_PROTOCOL):
-            sock.sendall(('Content-Length: %s\r\n\r\n' % len(as_bytes)).encode('ascii'))
-
-        sock.sendall(as_bytes)
+        try:
+            if get_protocol() in (HTTP_PROTOCOL, HTTP_JSON_PROTOCOL):
+                sock.sendall(('Content-Length: %s\r\n\r\n' % len(as_bytes)).encode('ascii'))
+            sock.sendall(as_bytes)
+        except:
+            if IS_JYTHON:
+                # Ignore errors in sock.sendall in Jython (seems to be common for Jython to
+                # give spurious exceptions at interpreter shutdown here).
+                pass
+            else:
+                raise
 
     @classmethod
     def _show_debug_info(cls, cmd_id, seq, text):
