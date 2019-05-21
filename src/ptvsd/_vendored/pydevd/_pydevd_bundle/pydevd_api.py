@@ -250,6 +250,30 @@ class PyDevdAPI(object):
         filename = self.filename_to_str(filename)
         return pydevd_file_utils.norm_file_to_server(filename)
 
+    class _DummyFrame(object):
+        '''
+        Dummy frame to be used with PyDB.apply_files_filter (as we don't really have the
+        related frame as breakpoints are added before execution).
+        '''
+
+        class _DummyCode(object):
+
+            def __init__(self, filename):
+                self.co_firstlineno = 1
+                self.co_filename = filename
+                self.co_name = '<module>'
+
+        def __init__(self, filename):
+            self.f_code = self._DummyCode(filename)
+            # It may be used to get the module name through f_globals.get('__name__').
+            # (unfortunately at this point we don't have it, so, it's possible that we
+            # say we have verified a breakpoint and actually didn't if the user created
+            # a filter with a module name).
+            # An option could be calculate it based on the filename and current sys.path,
+            # but on some occasions that may be wrong (for instance with `__main__` or if
+            # the user dynamically changes the PYTHONPATH).
+            self.f_globals = {}
+
     def add_breakpoint(
             self, py_db, filename, breakpoint_type, breakpoint_id, line, condition, func_name, expression, suspend_policy, hit_condition, is_logpoint):
         '''
@@ -285,14 +309,20 @@ class PyDevdAPI(object):
         :param bool is_logpoint:
             If True and an expression is passed, pydevd will create an io message command with the
             result of the evaluation.
+
+        :return str:
+            A string with the error when adding the breakpoint or None if it's ok.
         '''
         assert filename.__class__ == str  # i.e.: bytes on py2 and str on py3
         assert func_name.__class__ == str  # i.e.: bytes on py2 and str on py3
 
         if not pydevd_file_utils.exists(filename):
-            pydev_log.critical('pydev debugger: warning: trying to add breakpoint'\
-                ' to file that does not exist: %s (will have no effect)\n' % (filename,))
-            return
+            msg = 'Trying to add breakpoint to file that does not exist: %s (will have no effect).' % (filename,)
+            return msg
+
+        if py_db.is_files_filter_enabled and py_db.apply_files_filter(self._DummyFrame(filename), filename, False):
+            msg = 'Trying to add breakpoint to file that is filtered out: %s (will have no effect).' % (filename,)
+            return msg
 
         if breakpoint_type == 'python-line':
             added_breakpoint = LineBreakpoint(line, condition, func_name, expression, suspend_policy, hit_condition=hit_condition, is_logpoint=is_logpoint)
@@ -329,6 +359,7 @@ class PyDevdAPI(object):
             py_db.has_plugin_line_breaks = py_db.plugin.has_line_breaks()
 
         py_db.on_breakpoints_changed()
+        return None
 
     def remove_all_breakpoints(self, py_db, filename):
         '''

@@ -257,8 +257,11 @@ class _PyDevCommandProcessor(object):
         filename = self.api.filename_to_server(filename)
         func_name = self.api.to_str(func_name)
 
-        self.api.add_breakpoint(
+        error_msg = self.api.add_breakpoint(
             py_db, filename, btype, breakpoint_id, line, condition, func_name, expression, suspend_policy, hit_condition, is_logpoint)
+
+        if error_msg:
+            pydev_log.critical('pydev debugger: warning: %s' % (error_msg,))
 
     def cmd_remove_break(self, py_db, cmd_id, seq, text):
         # command to remove some breakpoint
