@@ -782,7 +782,7 @@ class PyDB(object):
             else:
                 module_name = None
                 if self._files_filtering.require_module:
-                    module_name = frame.f_globals.get('__name__')
+                    module_name = frame.f_globals.get('__name__', '')
                 cache[filename] = self._files_filtering.exclude_by_filter(filename, module_name)
 
             return cache[filename]
