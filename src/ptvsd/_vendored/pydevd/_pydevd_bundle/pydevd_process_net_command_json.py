@@ -510,10 +510,22 @@ class _PyDevJsonCommandProcessor(object):
                 is_logpoint = True
                 expression = convert_dap_log_message_to_expression(log_message)
 
-            error_msg = self.api.add_breakpoint(
+            error_code = self.api.add_breakpoint(
                 py_db, filename, btype, breakpoint_id, line, condition, func_name, expression, suspend_policy, hit_condition, is_logpoint)
 
-            if error_msg:
+            if error_code:
+                if error_code == self.api.ADD_BREAKPOINT_FILE_NOT_FOUND:
+                    error_msg = 'Breakpoint in file that does not exist.'
+
+                elif error_code == self.api.ADD_BREAKPOINT_FILE_EXCLUDED_BY_FILTERS:
+                    error_msg = 'Breakpoint in file excluded by filters.'
+                    if py_db.get_use_libraries_filter():
+                        error_msg += '\nNote: may be excluded because of "justMyCode" option (default == true).'
+
+                else:
+                    # Shouldn't get here.
+                    error_msg = 'Breakpoint not validated (reason unknown -- please report as bug).'
+
                 breakpoints_set.append(pydevd_schema.Breakpoint(
                     verified=False, line=line, message=error_msg).to_dict())
             else:
