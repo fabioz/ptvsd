@@ -15,14 +15,14 @@ from _pydevd_bundle._debug_adapter.pydevd_schema import (
     GotoTargetsResponseBody, ModulesResponseBody, ProcessEventBody,
 	ProcessEvent, Scope, ScopesResponseBody, SetExpressionResponseBody,
 	SetVariableResponseBody, SourceBreakpoint, SourceResponseBody,
-	VariablesResponseBody)
+	VariablesResponseBody, SetBreakpointsResponseBody)
 from _pydevd_bundle.pydevd_api import PyDevdAPI
 from _pydevd_bundle.pydevd_breakpoints import get_exception_class
 from _pydevd_bundle.pydevd_comm_constants import (
     CMD_PROCESS_EVENT, CMD_RETURN, CMD_SET_NEXT_STATEMENT, CMD_STEP_INTO,
 	CMD_STEP_INTO_MY_CODE, CMD_STEP_OVER, CMD_STEP_OVER_MY_CODE,
 	CMD_STEP_RETURN, CMD_STEP_RETURN_MY_CODE)
-from _pydevd_bundle.pydevd_constants import DebugInfoHolder, IS_WINDOWS
+from _pydevd_bundle.pydevd_constants import DebugInfoHolder
 from _pydevd_bundle.pydevd_filtering import ExcludeFilter
 from _pydevd_bundle.pydevd_json_debug_options import _extract_debug_options
 from _pydevd_bundle.pydevd_net_command import NetCommand
@@ -193,14 +193,10 @@ class _PyDevJsonCommandProcessor(object):
             if DEBUG:
                 print('Handled in pydevd: %s (in _PyDevJsonCommandProcessor).\n' % (method_name,))
 
-        py_db._main_lock.acquire()
-        try:
-
+        with py_db._main_lock:
             cmd = on_request(py_db, request)
             if cmd is not None:
                 py_db.writer.add_command(cmd)
-        finally:
-            py_db._main_lock.release()
 
     def on_configurationdone_request(self, py_db, request):
         '''
@@ -462,6 +458,19 @@ class _PyDevJsonCommandProcessor(object):
         '''
         :param SetBreakpointsRequest request:
         '''
+        if not self._launch_or_attach_request_done:
+            # Note that to validate the breakpoints we need the launch request to be done already
+            # (otherwise the filters wouldn't be set for the breakpoint validation).
+            body = SetBreakpointsResponseBody([])
+            response = pydevd_base_schema.build_response(
+                request,
+                kwargs={
+                    'body': body,
+                    'success': False,
+                    'message': 'Breakpoints may only be set after the launch request is received.'
+                })
+            return NetCommand(CMD_RETURN, 0, response, is_json=True)
+
         arguments = request.arguments  # : :type arguments: SetBreakpointsArguments
         # TODO: Path is optional here it could be source reference.
         filename = arguments.source.path
