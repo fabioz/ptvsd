@@ -17,7 +17,6 @@ from .session import PyDevdDebugSession
 from ._util import (
     ClosedError, NotRunningError, ignore_errors, lock_wait)
 
-
 session_not_bound = threading.Event()
 session_not_bound.set()
 
@@ -55,9 +54,9 @@ class DaemonStoppedError(DaemonError):
     """Indicates that a Daemon was unexpectedly stopped."""
     MSG = 'stopped'
 
-
 # TODO: Inherit from Closeable.
 # TODO: Inherit from Startable?
+
 
 class DaemonBase(object):
     """The base class for DAP daemons."""
@@ -287,6 +286,26 @@ class DaemonBase(object):
                 return
             self._stopped = True
 
+        session = self.session
+
+        if session is not None:
+            lock = threading.Lock()
+            lock.acquire()
+
+            def wait_debugger(timeout=None):
+                lock_wait(lock, timeout)
+
+            def wait_exiting(cfg):
+                if cfg:
+                    self._wait_for_user()
+                lock.release()
+
+            # TODO: Rely on self._stop_debugger().
+            session.handle_debugger_stopped(wait_debugger)
+            session.handle_exiting(self.exitcode, wait_exiting)
+
+            session.wait_until_stopped()
+
         server = self._server
         self._server = None
 
@@ -443,29 +462,11 @@ class DaemonBase(object):
         ptvsd.log.debug('Handling atexit')
         with self._lock:
             self._exiting_via_atexit_handler = True
-        session = self.session
-
-        if session is not None:
-            lock = threading.Lock()
-            lock.acquire()
-
-            def wait_debugger(timeout=None):
-                lock_wait(lock, timeout)
-
-            def wait_exiting(cfg):
-                if cfg:
-                    self._wait_for_user()
-                lock.release()
-            # TODO: Rely on self._stop_debugger().
-            session.handle_debugger_stopped(wait_debugger)
-            session.handle_exiting(self.exitcode, wait_exiting)
 
         try:
             self.close()
         except DaemonClosedError:
             pass
-        if session is not None:
-            session.wait_until_stopped()
 
     def _handle_signal(self, signum, frame):
         ptvsd.log.debug('Handling signal')
@@ -527,6 +528,7 @@ class Daemon(DaemonBase):
         )
 
     def _session_kwargs(self):
+
         def debugger_ready(session):
             if self._notify_session_debugger_ready is not None:
                 self._notify_session_debugger_ready(session)
