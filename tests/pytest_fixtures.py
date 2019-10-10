@@ -113,6 +113,7 @@ def with_pydevd_log(request, tmpdir):
     filename = tempfile.mktemp(suffix=".log", prefix=prefix, dir=str(tmpdir))
 
     pydevd_log.enable(filename)
+    yield
 
     if request.node.setup_report.passed:
         if not request.node.call_report.failed:
