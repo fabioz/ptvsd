@@ -17,7 +17,6 @@ from ptvsd.common import compat, fmt, log, options, timestamp
 from tests import code, pydevd_log
 from tests.debug import runners, session, targets
 
-
 # Set up the test matrix for various code types and attach methods. Most tests will
 # use both run_as and start_method, so the matrix is a cross product of them.
 
@@ -113,8 +112,7 @@ def with_pydevd_log(request, tmpdir):
     prefix = "pydevd_debug_file-{0}".format(os.getpid())
     filename = tempfile.mktemp(suffix=".log", prefix=prefix, dir=str(tmpdir))
 
-    with pydevd_log.enabled(filename):
-        yield
+    pydevd_log.enable(filename)
 
     if request.node.setup_report.passed:
         if not request.node.call_report.failed:
@@ -158,7 +156,6 @@ if platform.system() != "Windows":
     @pytest.fixture
     def long_tmpdir(request, tmpdir):
         return tmpdir
-
 
 else:
     import ctypes
